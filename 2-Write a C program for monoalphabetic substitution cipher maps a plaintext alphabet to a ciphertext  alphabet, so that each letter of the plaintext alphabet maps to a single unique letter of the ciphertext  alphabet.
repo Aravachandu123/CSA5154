@@ -1,0 +1,51 @@
+#include <stdio.h>
+#include <string.h>
+// Function to encrypt plaintext using monoalphabetic substitution cipher
+void encrypt(char *plaintext, char *ciphertext, char *mapping) {
+    int i;
+    for (i = 0; i < strlen(plaintext); i++) {
+        if (plaintext[i] >= 'a' && plaintext[i] <= 'z') {
+            // Find the corresponding ciphertext character
+            ciphertext[i] = mapping[plaintext[i] - 'a'];
+        } else if (plaintext[i] >= 'A' && plaintext[i] <= 'Z') {
+            // Handle uppercase letters
+            ciphertext[i] = mapping[plaintext[i] - 'A'] - 'a' + 'A';
+        } else {
+            // Leave non-alphabetic characters unchanged
+            ciphertext[i] = plaintext[i];
+        }
+    }
+    ciphertext[i] = '\0'; // Null-terminate the ciphertext string
+}
+// Function to decrypt ciphertext using monoalphabetic substitution cipher
+void decrypt(char *ciphertext, char *plaintext, char *mapping) {
+    int i;
+    for (i = 0; i < strlen(ciphertext); i++) {
+        if (ciphertext[i] >= 'a' && ciphertext[i] <= 'z') {
+            // Find the corresponding plaintext character
+            plaintext[i] = 'a' + (ciphertext[i] - mapping[0]);
+        } else if (ciphertext[i] >= 'A' && ciphertext[i] <= 'Z') {
+            // Handle uppercase letters
+            plaintext[i] = 'A' + (ciphertext[i] - mapping[0] - 'A' + 'a');
+        } else {
+            // Leave non-alphabetic characters unchanged
+            plaintext[i] = ciphertext[i];
+        }
+    }
+    plaintext[i] = '\0'; // Null-terminate the plaintext string
+}
+int main() {
+    char plaintext[] = "Hello, World!";
+    char ciphertext[256];
+    char mapping[] = "zyxwvutsrqponmlkjihgfedcba"; // Example mapping
+    printf("Plaintext: %s\n", plaintext);
+    // Encrypt plaintext
+    encrypt(plaintext, ciphertext, mapping);
+    printf("Ciphertext: %s\n", ciphertext);
+    // Decrypt ciphertext
+    char decrypted[256];
+    decrypt(ciphertext, decrypted, mapping);
+    printf("Decrypted: %s\n", decrypted);
+    printf("\nCreated by Chandu (192210425)\n");
+    return 0;
+}
