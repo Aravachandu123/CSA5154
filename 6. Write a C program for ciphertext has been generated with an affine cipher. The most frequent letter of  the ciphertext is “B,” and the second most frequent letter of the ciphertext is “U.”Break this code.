@@ -1,0 +1,82 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+// Function to find the greatest common divisor (GCD) of two numbers
+int gcd(int a, int b) {
+    while (b != 0) {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
+// Function to find the modular multiplicative inverse of 'a' under modulo 'm'
+int modInverse(int a, int m) {
+    for (int x = 1; x < m; x++) {
+        if ((a * x) % m == 1) {
+            return x;
+        }
+    }
+    return -1;
+}
+
+// Function to decrypt the ciphertext using the affine cipher
+void decrypt(char ciphertext[], int a, int b, char plaintext[]) {
+    int a_inv = modInverse(a, 26); // Find the modular multiplicative inverse of 'a'
+    if (a_inv == -1) {
+        printf("Inverse of a does not exist. Decryption is not possible.\n");
+        return;
+    }
+    int i;
+    for (i = 0; ciphertext[i] != '\0'; i++) {
+        if (isalpha(ciphertext[i])) {
+            char offset = isupper(ciphertext[i]) ? 'A' : 'a';
+            plaintext[i] = (a_inv * ((ciphertext[i] - offset - b + 26) % 26)) % 26 + offset;
+        } else {
+            plaintext[i] = ciphertext[i];
+        }
+    }
+    plaintext[i] = '\0'; // Null-terminate the plaintext
+}
+
+// Function to solve for a and b using the given ciphertext and assumed plaintext
+void solveForKeys(int c1, int p1, int c2, int p2, int *a, int *b) {
+    // c1 = (a * p1 + b) % 26
+    // c2 = (a * p2 + b) % 26
+    // Solving the system of equations:
+    // (c1 - c2) % 26 = (a * (p1 - p2)) % 26
+    int diff_c = (c1 - c2 + 26) % 26;
+    int diff_p = (p1 - p2 + 26) % 26;
+
+    *a = (diff_c * modInverse(diff_p, 26)) % 26;
+    *b = (c1 - (*a * p1) % 26 + 26) % 26;
+}
+
+int main() {
+    char ciphertext[100];
+    char plaintext[100];
+    int a, b;
+
+    // Assuming most frequent letters are 'B' (1) and 'U' (20)
+    int c1 = 1;  // 'B'
+    int c2 = 20; // 'U'
+    // Assuming they correspond to 'E' (4) and 'T' (19)
+    int p1 = 4;  // 'E'
+    int p2 = 19; // 'T'
+
+    solveForKeys(c1, p1, c2, p2, &a, &b);
+
+    printf("Calculated keys: a = %d, b = %d\n", a, b);
+
+    printf("Enter the ciphertext: ");
+    fgets(ciphertext, sizeof(ciphertext), stdin);
+    ciphertext[strcspn(ciphertext, "\n")] = 0; // Remove the trailing newline
+
+    // Decrypt the ciphertext
+    decrypt(ciphertext, a, b, plaintext);
+    printf("Decrypted Text: %s\n", plaintext);
+
+    return 0;
+}
