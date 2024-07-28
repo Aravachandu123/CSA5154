@@ -1,0 +1,37 @@
+#include <stdio.h>
+#include <math.h>
+
+// Function to calculate the factorial of a number
+long long factorial(int n) {
+    long long result = 1;
+    for (int i = 1; i <= n; i++) {
+        result *= i;
+    }
+    return result;
+}
+
+int main() {
+    // Calculate the number of possible keys
+    int num_letters = 25; // 25 letters in the alphabet (ignoring J)
+    long long num_keys = factorial(num_letters);
+
+    // Express the result as an approximate power of 2
+    double log2_num_keys = log2(num_keys);
+    int approx_power_of_2 = (int)round(log2_num_keys);
+
+    printf("Number of possible keys: %lld\n", num_keys);
+    printf("Approximate power of 2: 2^%d\n", approx_power_of_2);
+
+    // Now take into account the fact that some Playfair keys produce the same encryption results
+    int num_equivalent_keys = 120 * 120; // 120 ways to permute rows and columns
+    long long num_unique_keys = num_keys / num_equivalent_keys;
+
+    // Express the result as an approximate power of 2
+    double log2_num_unique_keys = log2(num_unique_keys);
+    int approx_power_of_2_unique = (int)round(log2_num_unique_keys);
+
+    printf("Number of effectively unique keys: %lld\n", num_unique_keys);
+    printf("Approximate power of 2: 2^%d\n", approx_power_of_2_unique);
+
+    return 0;
+}
