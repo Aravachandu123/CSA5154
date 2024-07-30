@@ -1,0 +1,68 @@
+#include <stdio.h>
+#include <string.h>
+
+// Define the block size in bits
+#define BLOCK_SIZE 128
+
+#if BLOCK_SIZE == 64
+#define Rb 0x1B
+#elif BLOCK_SIZE == 128
+#define Rb 0x87
+#endif
+
+void print_hex(unsigned char *data, size_t len) {
+    for (size_t i = 0; i < len; i++) {
+        printf("%02x", data[i]);
+    }
+    printf("\n");
+}
+
+// Perform left shift on a block and XOR with Rb if necessary
+void generate_subkey(unsigned char *subkey, unsigned char *L, int block_size) {
+    int carry = 0;
+    for (int i = block_size - 1; i >= 0; i--) {
+        int new_carry = (L[i] & 0x80) ? 1 : 0; // Check MSB before shift
+        subkey[i] = (L[i] << 1) | carry;
+        carry = new_carry;
+    }
+
+    if (carry) {
+        subkey[block_size - 1] ^= Rb;
+    }
+}
+
+int main() {
+    // Example block size in bytes
+    int block_size = BLOCK_SIZE / 8;
+
+    // Initialize the zero block
+    unsigned char L[block_size];
+    unsigned char K1[block_size];
+    unsigned char K2[block_size];
+
+    memset(L, 0, block_size);
+
+    // Placeholder for encryption function
+    // Encrypt the zero block with the block cipher to get L
+    // In practice, this should be replaced with the actual encryption call
+    // For demonstration, we'll assume L is given as a non-zero value
+    // Example: L = Encrypt(zero_block)
+    // Here we assume L is an array filled with some encrypted data for demonstration
+    // This should be replaced by actual encryption output
+    memset(L, 0xA3, block_size);  // Example encrypted output for demonstration
+
+    // Generate K1
+    generate_subkey(K1, L, block_size);
+    // Generate K2
+    generate_subkey(K2, K1, block_size);
+
+    // Print the generated subkeys
+    printf("L:  ");
+    print_hex(L, block_size);
+    printf("K1: ");
+    print_hex(K1, block_size);
+    printf("K2: ");
+    print_hex(K2, block_size);
+
+    return 0;
+}
