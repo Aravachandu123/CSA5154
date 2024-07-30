@@ -1,0 +1,100 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define BLOCK_SIZE 16  // Example block size, typically 128 bits (16 bytes)
+#define MAX_TEXT_SIZE 1024
+
+// Function to apply simple padding to the plaintext
+int pad(unsigned char *plaintext, int len) {
+    int padding_len = BLOCK_SIZE - (len % BLOCK_SIZE);
+    plaintext[len] = 0x80; // Padding starts with a 1 bit (0x80 in hexadecimal)
+    for (int i = 1; i < padding_len; i++) {
+        plaintext[len + i] = 0x00; // The rest is filled with 0 bits
+    }
+    return len + padding_len;
+}
+
+// ECB mode encryption
+void encryptECB(unsigned char *plaintext, unsigned char *ciphertext, int len) {
+    // This is a placeholder for a real block cipher encryption, like AES
+    for (int i = 0; i < len; i += BLOCK_SIZE) {
+        // Encrypt block (for demonstration, we simply copy the plaintext)
+        memcpy(ciphertext + i, plaintext + i, BLOCK_SIZE);
+    }
+}
+
+// CBC mode encryption
+void encryptCBC(unsigned char *plaintext, unsigned char *ciphertext, unsigned char *iv, int len) {
+    unsigned char xor_block[BLOCK_SIZE];
+    memcpy(xor_block, iv, BLOCK_SIZE);
+
+    for (int i = 0; i < len; i += BLOCK_SIZE) {
+        // XOR the plaintext block with the previous ciphertext block (or IV for the first block)
+        for (int j = 0; j < BLOCK_SIZE; j++) {
+            xor_block[j] ^= plaintext[i + j];
+        }
+        // Encrypt the xor_block (for demonstration, we simply copy it)
+        memcpy(ciphertext + i, xor_block, BLOCK_SIZE);
+        // Update xor_block with the ciphertext
+        memcpy(xor_block, ciphertext + i, BLOCK_SIZE);
+    }
+}
+
+// CFB mode encryption (segment size = BLOCK_SIZE)
+void encryptCFB(unsigned char *plaintext, unsigned char *ciphertext, unsigned char *iv, int len) {
+    unsigned char shift_register[BLOCK_SIZE];
+    memcpy(shift_register, iv, BLOCK_SIZE);
+
+    for (int i = 0; i < len; i += BLOCK_SIZE) {
+        // Encrypt the shift register (for demonstration, we simply copy it)
+        unsigned char encrypted_block[BLOCK_SIZE];
+        memcpy(encrypted_block, shift_register, BLOCK_SIZE);
+
+        // XOR with plaintext to produce ciphertext
+        for (int j = 0; j < BLOCK_SIZE; j++) {
+            ciphertext[i + j] = plaintext[i + j] ^ encrypted_block[j];
+        }
+        // Update shift register with ciphertext
+        memcpy(shift_register, ciphertext + i, BLOCK_SIZE);
+    }
+}
+
+int main() {
+    unsigned char plaintext[MAX_TEXT_SIZE];
+    unsigned char ciphertext[MAX_TEXT_SIZE];
+    unsigned char iv[BLOCK_SIZE] = {0}; // Initialization vector (IV)
+    int len;
+
+    printf("Enter the plaintext (max %d characters): ", MAX_TEXT_SIZE - BLOCK_SIZE);
+    fgets((char *)plaintext, MAX_TEXT_SIZE - BLOCK_SIZE, stdin);
+    len = strlen((char *)plaintext);
+    if (plaintext[len - 1] == '\n') {
+        plaintext[len - 1] = '\0';
+        len--;
+    }
+
+    // Apply padding to the plaintext
+    len = pad(plaintext, len);
+
+    printf("\nECB Mode Encryption:\n");
+    encryptECB(plaintext, ciphertext, len);
+    for (int i = 0; i < len; i++) {
+        printf("%02X ", ciphertext[i]);
+    }
+
+    printf("\n\nCBC Mode Encryption:\n");
+    encryptCBC(plaintext, ciphertext, iv, len);
+    for (int i = 0; i < len; i++) {
+        printf("%02X ", ciphertext[i]);
+    }
+
+    printf("\n\nCFB Mode Encryption:\n");
+    encryptCFB(plaintext, ciphertext, iv, len);
+    for (int i = 0; i < len; i++) {
+        printf("%02X ", ciphertext[i]);
+    }
+
+    printf("\n");
+    return 0;
+}
