@@ -1,0 +1,23 @@
+#include <stdio.h>
+#include <string.h>
+void monoalphabeticCipher(char* plaintext, char* ciphertext, char* mapping) {
+    for (int i = 0; plaintext[i] != '\0'; ++i) {
+        char ch = plaintext[i];
+        if (ch >= 'a' && ch <= 'z') {
+            ciphertext[i] = mapping[ch - 'a'];
+        } else {
+            ciphertext[i] = ch; 
+        }
+    }
+    ciphertext[strlen(plaintext)] = '\0';
+}
+int main() {
+    char plaintext[100];
+    char ciphertext[100];
+    char mapping[26] = "qwertyuiopasdfghjklzxcvbnm";
+    printf("Enter a string (lowercase only): ");
+    scanf("%s", plaintext);
+    monoalphabeticCipher(plaintext, ciphertext, mapping);
+    printf("Encrypted string: %s\n", ciphertext);
+    return 0;
+}
