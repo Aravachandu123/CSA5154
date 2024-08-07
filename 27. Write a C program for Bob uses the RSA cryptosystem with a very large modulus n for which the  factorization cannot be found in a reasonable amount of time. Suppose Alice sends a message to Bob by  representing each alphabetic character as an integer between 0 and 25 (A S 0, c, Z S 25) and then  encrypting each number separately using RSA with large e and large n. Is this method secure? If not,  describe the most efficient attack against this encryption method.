@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+unsigned long long mod_exp(unsigned long long base, unsigned long long exp, unsigned long long mod) {
+    unsigned long long result = 1;
+    while (exp > 0) {
+        if (exp % 2 == 1) {
+            result = (result * base) % mod;
+        }
+        base = (base * base) % mod;
+        exp /= 2;
+    }
+    return result;
+}
+
+// RSA encryption function
+unsigned long long rsa_encrypt(unsigned long long plaintext, unsigned long long e, unsigned long long n) {
+    return mod_exp(plaintext, e, n);
+}
+unsigned long long rsa_decrypt(unsigned long long ciphertext, unsigned long long d, unsigned long long n) {
+    return mod_exp(ciphertext, d, n);
+}
+
+// Main function
+int main() {
+    unsigned long long n = 3233; // Example modulus (product of two primes)
+    unsigned long long e = 17;   // Example public exponent
+    unsigned long long d = 2753;  // Example private exponent
+    char plaintext[] = "HELLO";   // Example plaintext
+    int i;
+    printf("Original Message: %s\n", plaintext);
+    printf("Encrypted Message:\n");
+    for (i = 0; plaintext[i] != '\0'; i++) {
+        unsigned long long plaintext_int = plaintext[i] - 'A'; // Convert character to integer (0-25)
+        unsigned long long ciphertext = rsa_encrypt(plaintext_int, e, n);
+        printf("%llu ", ciphertext);
+    }
+    printf("\n");
+    printf("Decrypted Message:\n");
+    for (i = 0; plaintext[i] != '\0'; i++) {
+        unsigned long long ciphertext_int = rsa_encrypt(plaintext[i] - 'A', e, n);
+        unsigned long long decrypted_int = rsa_decrypt(ciphertext_int, d, n);
+        printf("%c", decrypted_int + 'A'); 
+    }
+    printf("\n");
+    return 0;
+}
