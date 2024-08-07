@@ -1,0 +1,78 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+
+#define BLOCK_SIZE 16 // 128 bits
+
+// Simple block cipher encryption (for educational purposes only)
+void simple_block_cipher_encrypt(const uint8_t *input, uint8_t *output, const uint8_t *key) {
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        output[i] = input[i] ^ key[i]; // Simple XOR encryption
+    }
+}
+
+// Function to perform AES-like CBC encryption
+void cbc_encrypt(const uint8_t *key, uint8_t *data, size_t length, uint8_t *iv) {
+    uint8_t block[BLOCK_SIZE];
+    uint8_t previous_block[BLOCK_SIZE];
+    memcpy(previous_block, iv, BLOCK_SIZE);
+
+    for (size_t i = 0; i < length; i += BLOCK_SIZE) {
+        // XOR the plaintext block with the previous ciphertext block (or IV for the first block)
+        for (int j = 0; j < BLOCK_SIZE; j++) {
+            block[j] = data[i + j] ^ previous_block[j];
+        }
+
+        // Encrypt the block
+        simple_block_cipher_encrypt(block, block, key);
+
+        // Copy the ciphertext block to the previous_block for the next iteration
+        memcpy(previous_block, block, BLOCK_SIZE);
+        
+        // Store or process the ciphertext block (not shown here for simplicity)
+    }
+}
+
+// Function to compute CBC MAC
+void compute_cbc_mac(const uint8_t *key, const uint8_t *input, size_t length, uint8_t *mac) {
+    uint8_t iv[BLOCK_SIZE] = {0}; // Initialization vector
+    cbc_encrypt(key, (uint8_t *)input, length, iv);
+    memcpy(mac, iv, BLOCK_SIZE); // The final value of the IV is the MAC
+}
+
+int main() {
+    uint8_t key[BLOCK_SIZE] = {0x01}; // Fixed key for simplicity
+    uint8_t x[BLOCK_SIZE] = {0x01}; // Message X (1 block)
+    uint8_t mac[BLOCK_SIZE]; // MAC value for X
+
+    // Compute CBC MAC for message X
+    compute_cbc_mac(key, x, BLOCK_SIZE, mac);
+    printf("Original message X: ");
+    for (int i = 0; i < BLOCK_SIZE; i++) printf("%02x", x[i]);
+    printf("\nCBC MAC T: ");
+    for (int i = 0; i < BLOCK_SIZE; i++) printf("%02x", mac[i]);
+    printf("\n");
+
+    // Construct the two-block message X || (X ? T)
+    uint8_t x_xor_mac[BLOCK_SIZE];
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        x_xor_mac[i] = x[i] ^ mac[i];
+    }
+    printf("X XOR T: ");
+    for (int i = 0; i < BLOCK_SIZE; i++) printf("%02x", x_xor_mac[i]);
+    printf("\n");
+
+    // Construct the two-block message X || (X XOR T)
+    uint8_t two_block_message[2 * BLOCK_SIZE];
+    memcpy(two_block_message, x, BLOCK_SIZE);
+    memcpy(two_block_message + BLOCK_SIZE, x_xor_mac, BLOCK_SIZE);
+
+    // Compute CBC MAC for the two-block message
+    uint8_t mac_two_blocks[BLOCK_SIZE];
+    compute_cbc_mac(key, two_block_message, 2 * BLOCK_SIZE, mac_two_blocks);
+    printf("MAC for X || (X XOR T): ");
+    for (int i = 0; i < BLOCK_SIZE; i++) printf("%02x", mac_two_blocks[i]);
+    printf("\n");
+
+    return 0;
+}
