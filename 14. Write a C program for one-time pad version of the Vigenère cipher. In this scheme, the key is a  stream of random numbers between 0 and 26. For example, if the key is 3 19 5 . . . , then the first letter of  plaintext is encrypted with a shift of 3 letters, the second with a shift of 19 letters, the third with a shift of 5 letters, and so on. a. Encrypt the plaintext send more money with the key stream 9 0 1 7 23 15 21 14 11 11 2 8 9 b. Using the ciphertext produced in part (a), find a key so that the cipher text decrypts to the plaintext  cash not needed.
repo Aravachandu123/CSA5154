@@ -1,0 +1,55 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+void encrypt(char plaintext[], char ciphertext[], int key[], int key_length) {
+    int n = strlen(plaintext);
+    for (int i = 0; i < n; i++) {
+        if (plaintext[i] >= 'a' && plaintext[i] <= 'z') {
+            ciphertext[i] = 'a' + (plaintext[i] - 'a' + key[i % key_length]) % 26;
+        } else {
+            ciphertext[i] = plaintext[i]; 
+        }
+    }
+    ciphertext[n] = '\0';
+}
+void decrypt(char ciphertext[], char decryptedtext[], int key[], int key_length) {
+    int n = strlen(ciphertext);
+    for (int i = 0; i < n; i++) {
+        if (ciphertext[i] >= 'a' && ciphertext[i] <= 'z') {
+            decryptedtext[i] = 'a' + (ciphertext[i] - 'a' - key[i % key_length] + 26) % 26;
+        } else {
+            decryptedtext[i] = ciphertext[i]; 
+        }
+    }
+    decryptedtext[n] = '\0';
+}
+void calculateNewKey(char original_plaintext[], char new_plaintext[], char ciphertext[], int new_key[]) {
+    int n = strlen(original_plaintext);
+    for (int i = 0; i < n; i++) {
+        if (original_plaintext[i] >= 'a' && original_plaintext[i] <= 'z' && new_plaintext[i] >= 'a' && new_plaintext[i] <= 'z') {
+            new_key[i] = (ciphertext[i] - 'a' - (new_plaintext[i] - 'a') + 26) % 26;
+        } else {
+            new_key[i] = 0; 
+        }
+    }
+}
+int main() {
+    char plaintext[] = "send more money";
+    char ciphertext[100];
+    char decryptedtext[100];
+    int key[] = {9, 0, 1, 7, 23, 15, 21, 14, 11, 11, 2, 8, 9};
+    int key_length = sizeof(key) / sizeof(key[0]);
+    encrypt(plaintext, ciphertext, key, key_length);
+    printf("Ciphertext: %s\n", ciphertext);
+    char new_plaintext[] = "cash not needed";
+    int new_key[100];
+    calculateNewKey(plaintext, new_plaintext, ciphertext, new_key);
+    printf("New key: ");
+    for (int i = 0; i < strlen(new_plaintext); i++) {
+        printf("%d ", new_key[i]);
+    }
+    printf("\n");
+    decrypt(ciphertext, decryptedtext, new_key, strlen(new_plaintext));
+    printf("Decrypted text with new key: %s\n", decryptedtext);
+    return 0;
+}
