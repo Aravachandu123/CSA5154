@@ -1,0 +1,65 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+// Function to compute the greatest common divisor (GCD) using the Euclidean algorithm
+int gcd(int a, int b) {
+    while (b != 0) {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
+// Function to compute the modular multiplicative inverse using the Extended Euclidean Algorithm
+int mod_inverse(int a, int m) {
+    int m0 = m, y = 0, x = 1;
+
+    if (m == 1) return 0;
+
+    while (a > 1) {
+        int q = a / m;
+        int t = m;
+
+        m = a % m;
+        a = t;
+        t = y;
+
+        y = x - q * y;
+        x = t;
+    }
+
+    if (x < 0) x += m0;
+
+    return x;
+}
+
+int main() {
+    int n = 3599; // Example n
+    int e = 31;   // Example public exponent
+    int plaintext_block = 53; // Example plaintext block with common factor
+
+    // Compute the common factor
+    int common_factor = gcd(plaintext_block, n);
+
+    // Compute the other factor
+    int other_factor = n / common_factor;
+
+    printf("Common factor of n: %d\n", common_factor);
+    printf("Other factor of n: %d\n", other_factor);
+
+    // Compute phi(n)
+    int phi_n = (common_factor - 1) * (other_factor - 1);
+
+    // Compute the modular multiplicative inverse of e modulo phi(n)
+    int d = mod_inverse(e, phi_n);
+
+    // Output the results
+    printf("Public key: (e = %d, n = %d)\n", e, n);
+    printf("Private key: d = %d\n", d);
+    printf("Prime factors of n: p = %d, q = %d\n", common_factor, other_factor);
+    printf("phi(n) = %d\n", phi_n);
+
+    return 0;
+}
