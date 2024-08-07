@@ -1,0 +1,83 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#define MATRIX_SIZE 5
+void createPlayfairMatrix(char matrix[MATRIX_SIZE][MATRIX_SIZE]) {
+    const char* matrixString = "MFHIJK UNOPQ ZVWXY ELA RGC DSTBC";
+    int k = 0;    
+    for (int i = 0; matrixString[i] != '\0'; ++i) {
+        if (isalpha(matrixString[i])) {
+            matrix[k / MATRIX_SIZE][k % MATRIX_SIZE] = toupper(matrixString[i]);
+            ++k;
+        }
+    }
+}
+void findPosition(char ch, const char matrix[MATRIX_SIZE][MATRIX_SIZE], int* row, int* col) {
+    for (int i = 0; i < MATRIX_SIZE; ++i) {
+        for (int j = 0; j < MATRIX_SIZE; ++j) {
+            if (matrix[i][j] == ch) {
+                *row = i;
+                *col = j;
+                return;
+            }
+        }
+    }
+}
+void encryptDigraph(char a, char b, const char matrix[MATRIX_SIZE][MATRIX_SIZE], char* encryptedA, char* encryptedB) {
+    int row1, col1, row2, col2;
+    findPosition(a, matrix, &row1, &col1);
+    findPosition(b, matrix, &row2, &col2);
+
+    if (row1 == row2) {  // Same row
+        *encryptedA = matrix[row1][(col1 + 1) % MATRIX_SIZE];
+        *encryptedB = matrix[row2][(col2 + 1) % MATRIX_SIZE];
+    } else if (col1 == col2) {  // Same column
+        *encryptedA = matrix[(row1 + 1) % MATRIX_SIZE][col1];
+        *encryptedB = matrix[(row2 + 1) % MATRIX_SIZE][col2];
+    } else {  // Rectangle
+        *encryptedA = matrix[row1][col2];
+        *encryptedB = matrix[row2][col1];
+    }
+}
+
+// Function to encrypt the plaintext using the Playfair cipher
+void playfairEncrypt(const char* plaintext, const char* keyword, char* ciphertext) {
+    char matrix[MATRIX_SIZE][MATRIX_SIZE];
+    createPlayfairMatrix(matrix);
+
+    int len = strlen(plaintext);
+    int j = 0;
+
+    for (int i = 0; i < len; i += 2) {
+        char a = toupper(plaintext[i]);
+        char b = (i + 1 < len) ? toupper(plaintext[i + 1]) : 'X';  // Default filler is 'X'
+
+        if (a == ' ') {
+            ciphertext[j++] = a;
+            --i;  // Skip space
+            continue;
+        }
+
+        if (b == ' ') {
+            ciphertext[j++] = b;
+            continue;
+        }
+
+        if (a == b) {  // If same letter in pair, use 'X' as filler
+            b = 'X';
+        }
+
+        char encryptedA, encryptedB;
+        encryptDigraph(a, b, matrix, &encryptedA, &encryptedB);
+        ciphertext[j++] = encryptedA;
+        ciphertext[j++] = encryptedB;
+    }
+    ciphertext[j] = '\0';  // Null-terminate the ciphertext
+}
+int main() {
+    const char* plaintext = "Must see you over Cadogan West. Coming at once.";
+    char ciphertext[256];
+    playfairEncrypt(plaintext, "", ciphertext);
+    printf("Encrypted string: %s\n", ciphertext);
+    return 0;
+}
