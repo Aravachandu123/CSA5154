@@ -1,0 +1,69 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+#define NUM_LANES 25
+#define CAPACITY_LANES 12 // Capacity portion has 12 lanes for a block size of 1024 bits
+#define MAX_ITERATIONS 1000 // Arbitrary limit to prevent infinite loops
+
+typedef uint64_t lane_t;
+
+// Function to initialize state matrix with capacity portion set to zero
+void initialize_state(lane_t state[NUM_LANES]) {
+    for (int i = 0; i < NUM_LANES; i++) {
+        state[i] = (i < NUM_LANES - CAPACITY_LANES) ? 1 : 0; // Initialize non-capacity lanes to 1 and capacity lanes to 0
+    }
+}
+
+// Function to set a lane to a nonzero value
+void set_nonzero(lane_t *lane) {
+    *lane |= 1; // Ensure the lane has at least one nonzero bit
+}
+
+// Function to check if all capacity lanes are nonzero
+bool all_capacity_lanes_nonzero(lane_t state[NUM_LANES]) {
+    for (int i = NUM_LANES - CAPACITY_LANES; i < NUM_LANES; i++) {
+        if (state[i] == 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Function to simulate SHA-3 updates (simplified)
+void simulate_sha3_update(lane_t state[NUM_LANES]) {
+    // Simulate the spread of nonzero bits to capacity lanes
+    for (int i = 0; i < NUM_LANES; i++) {
+        if (i < NUM_LANES - CAPACITY_LANES) {
+            // Spread nonzero bits to capacity lanes (simple example)
+            state[(i + 1) % NUM_LANES] |= (state[i] & 1);
+        }
+    }
+}
+
+int main() {
+    lane_t state[NUM_LANES];
+    int iterations = 0;
+
+    initialize_state(state);
+
+    // Simulate updates until all capacity lanes are nonzero
+    while (!all_capacity_lanes_nonzero(state) && iterations < MAX_ITERATIONS) {
+        simulate_sha3_update(state);
+        iterations++;
+    }
+
+    if (iterations == MAX_ITERATIONS) {
+        printf("Exceeded maximum iterations. Some capacity lanes are still zero.\n");
+    } else {
+        printf("Number of iterations needed for all capacity lanes to become nonzero: %d\n", iterations);
+    }
+
+    // Output the final state for debugging
+    printf("Final state:\n");
+    for (int i = 0; i < NUM_LANES; i++) {
+        printf("Lane %d: %llx\n", i, state[i]);
+    }
+
+    return 0;
+}
