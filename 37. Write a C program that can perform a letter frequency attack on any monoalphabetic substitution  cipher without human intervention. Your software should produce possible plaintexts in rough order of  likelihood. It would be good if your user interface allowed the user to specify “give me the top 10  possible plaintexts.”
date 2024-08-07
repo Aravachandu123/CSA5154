@@ -1,0 +1,99 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define ALPHABET_SIZE 26
+#define MAX_TEXT_LENGTH 1024
+#define TOP_N 10
+
+// Frequency table for English letters
+const char* english_freq_order = "ETAOINSHRDLCUMWFGYPBVKJXQZ";
+
+// Function to calculate letter frequencies in ciphertext
+void calculate_frequencies(const char* text, int* freq) {
+    for (int i = 0; text[i]; i++) {
+        char ch = toupper(text[i]);
+        if (isalpha(ch)) {
+            freq[ch - 'A']++;
+        }
+    }
+}
+
+// Function to sort frequency table in descending order of frequency
+void sort_by_frequency(int* freq, char* sorted_letters) {
+    int freq_copy[ALPHABET_SIZE];
+    memcpy(freq_copy, freq, sizeof(int) * ALPHABET_SIZE);
+
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        int max_freq = -1;
+        int max_index = -1;
+
+        for (int j = 0; j < ALPHABET_SIZE; j++) {
+            if (freq_copy[j] > max_freq) {
+                max_freq = freq_copy[j];
+                max_index = j;
+            }
+        }
+
+        sorted_letters[i] = 'A' + max_index;
+        freq_copy[max_index] = -1;  // Mark as used
+    }
+}
+
+// Function to perform substitution cipher decryption
+void decrypt_with_key(const char* ciphertext, const char* key, char* plaintext) {
+    for (int i = 0; ciphertext[i]; i++) {
+        char ch = toupper(ciphertext[i]);
+        if (isalpha(ch)) {
+            plaintext[i] = key[ch - 'A'];
+        } else {
+            plaintext[i] = ciphertext[i];
+        }
+    }
+    plaintext[strlen(ciphertext)] = '\0';  // Null-terminate the plaintext
+}
+
+// Function to generate and rank possible plaintexts
+void generate_plaintexts(const char* ciphertext, const char* freq_order, int top_n) {
+    char key[ALPHABET_SIZE + 1];
+    char plaintext[MAX_TEXT_LENGTH];
+    char sorted_letters[ALPHABET_SIZE];
+
+    int freq[ALPHABET_SIZE] = {0};
+    calculate_frequencies(ciphertext, freq);
+
+    sort_by_frequency(freq, sorted_letters);
+
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        key[sorted_letters[i] - 'A'] = freq_order[i];
+    }
+    key[ALPHABET_SIZE] = '\0';  // Null-terminate the key
+
+    printf("Generated plaintexts based on letter frequency:\n");
+    for (int i = 0; i < top_n; i++) {
+        decrypt_with_key(ciphertext, key, plaintext);
+        printf("%d. %s\n", i + 1, plaintext);
+        // Rotate key for next candidate
+        char temp = key[0];
+        memmove(key, key + 1, ALPHABET_SIZE - 1);
+        key[ALPHABET_SIZE - 1] = temp;
+    }
+}
+
+int main() {
+    char ciphertext[MAX_TEXT_LENGTH];
+    int top_n;
+
+    printf("Enter the ciphertext: ");
+    fgets(ciphertext, sizeof(ciphertext), stdin);
+    ciphertext[strcspn(ciphertext, "\n")] = '\0';  // Remove newline character
+
+    printf("Enter the number of top plaintexts to display: ");
+    scanf("%d", &top_n);
+    if (top_n > TOP_N) top_n = TOP_N;  // Limit to maximum of TOP_N
+
+    generate_plaintexts(ciphertext, english_freq_order, top_n);
+
+    return 0;
+}
