@@ -1,0 +1,84 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#define ALPHABET_SIZE 26
+typedef struct {
+    char character;
+    double frequency;
+} CharFreq;
+void calculateFrequency(const char* text, double freq[ALPHABET_SIZE]) {
+    int count[ALPHABET_SIZE] = {0};
+    int total = 0;
+    for (int i = 0; text[i] != '\0'; i++) {
+        if (text[i] >= 'a' && text[i] <= 'z') {
+            count[text[i] - 'a']++;
+            total++;
+        }
+    }
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        freq[i] = (double)count[i] / total;
+    }
+}
+void sortFrequency(double freq[ALPHABET_SIZE], CharFreq sortedFreq[ALPHABET_SIZE]) {
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        sortedFreq[i].character = 'a' + i;
+        sortedFreq[i].frequency = freq[i];
+    }
+
+    for (int i = 0; i < ALPHABET_SIZE - 1; i++) {
+        for (int j = i + 1; j < ALPHABET_SIZE; j++) {
+            if (sortedFreq[i].frequency < sortedFreq[j].frequency) {
+                CharFreq temp = sortedFreq[i];
+                sortedFreq[i] = sortedFreq[j];
+                sortedFreq[j] = temp;
+            }
+        }
+    }
+}
+
+// Function to map the sorted ciphertext frequency to English frequency
+void createSubstitutionMap(CharFreq ciphertextFreq[ALPHABET_SIZE], CharFreq englishFreq[ALPHABET_SIZE], char map[ALPHABET_SIZE]) {
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        map[ciphertextFreq[i].character - 'a'] = englishFreq[i].character;
+    }
+}
+
+// Function to decrypt the ciphertext using the substitution map
+void decrypt(const char* ciphertext, char* plaintext, char map[ALPHABET_SIZE]) {
+    for (int i = 0; ciphertext[i] != '\0'; i++) {
+        if (ciphertext[i] >= 'a' && ciphertext[i] <= 'z') {
+            plaintext[i] = map[ciphertext[i] - 'a'];
+        } else {
+            plaintext[i] = ciphertext[i];
+        }
+    }
+    plaintext[strlen(ciphertext)] = '\0';
+}
+int main() {
+    const char* ciphertext = "khoor zruog";
+    char plaintext[100];
+    double ciphertextFreq[ALPHABET_SIZE] = {0};
+    double englishFreq[ALPHABET_SIZE] = {
+        0.08167, 0.01492, 0.02782, 0.04253, 0.12702, 0.02228, 0.02015,
+        0.06094, 0.06966, 0.00153, 0.00772, 0.04025, 0.02406, 0.06749,
+        0.07507, 0.01929, 0.00095, 0.05987, 0.06327, 0.09056, 0.02758,
+        0.00978, 0.02360, 0.00150, 0.01974, 0.00074
+    };
+    CharFreq sortedCiphertextFreq[ALPHABET_SIZE];
+    CharFreq sortedEnglishFreq[ALPHABET_SIZE];
+    char map[ALPHABET_SIZE];
+    int topN;
+	printf("Enter the number of top possible plaintexts to display: ");
+    scanf("%d", &topN);
+	calculateFrequency(ciphertext, ciphertextFreq);
+	sortFrequency(ciphertextFreq, sortedCiphertextFreq);
+    sortFrequency(englishFreq, sortedEnglishFreq);
+	createSubstitutionMap(sortedCiphertextFreq, sortedEnglishFreq, map);
+	decrypt(ciphertext, plaintext, map);
+    printf("Decrypted text: %s\n", plaintext);
+	printf("Top %d possible plaintexts:\n", topN);
+    for (int i = 0; i < topN; i++) {
+        printf("%2d: %s\n", i + 1, plaintext); 
+    }
+    return 0;
+}
