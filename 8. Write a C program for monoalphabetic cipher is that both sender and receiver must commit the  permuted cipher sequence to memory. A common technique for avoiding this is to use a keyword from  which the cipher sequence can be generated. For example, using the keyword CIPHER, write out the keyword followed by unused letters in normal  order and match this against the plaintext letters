@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+void generateCipherAlphabet(const char* keyword, char* cipherAlphabet) {
+    int used[26] = {0};
+    int pos = 0;
+    for (int i = 0; keyword[i] != '\0'; ++i) {
+        char ch = toupper(keyword[i]);
+        if (isalpha(ch) && !used[ch - 'A']) {
+            cipherAlphabet[pos++] = ch;
+            used[ch - 'A'] = 1;
+        }
+    }
+    for (int i = 0; i < 26; ++i) {
+        if (!used[i]) {
+            cipherAlphabet[pos++] = 'A' + i;
+        }
+    }
+    cipherAlphabet[pos] = '\0';  
+}
+void encrypt(const char* plaintext, const char* cipherAlphabet, char* ciphertext) {
+    char plainAlphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for (int i = 0; plaintext[i] != '\0'; ++i) {
+        char ch = toupper(plaintext[i]);
+        if (isalpha(ch)) {
+            for (int j = 0; j < 26; ++j) {
+                if (plainAlphabet[j] == ch) {
+                    ciphertext[i] = cipherAlphabet[j];
+                    break;
+                }
+            }
+        } else {
+            ciphertext[i] = plaintext[i];
+        }
+    }
+    ciphertext[strlen(plaintext)] = '\0';  // Null-terminate the ciphertext
+}
+
+int main() {
+    char keyword[] = "CIPHER";
+    char cipherAlphabet[27];
+    char plaintext[100], ciphertext[100];
+
+    // Generate the cipher alphabet from the keyword
+    generateCipherAlphabet(keyword, cipherAlphabet);
+    
+    printf("Cipher alphabet: %s\n", cipherAlphabet);
+    
+    // Get the plaintext
+    printf("Enter the plaintext: ");
+    scanf(" %[^\n]s", plaintext);  // Read the entire line, including spaces
+
+    // Encrypt the plaintext
+    encrypt(plaintext, cipherAlphabet, ciphertext);
+    
+    // Output the encrypted string
+    printf("Encrypted string: %s\n", ciphertext);
+
+    return 0;
+}
