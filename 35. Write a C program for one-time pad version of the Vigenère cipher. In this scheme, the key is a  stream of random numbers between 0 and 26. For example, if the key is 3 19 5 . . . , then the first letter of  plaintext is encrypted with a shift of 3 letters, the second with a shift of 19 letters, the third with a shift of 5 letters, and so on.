@@ -1,0 +1,65 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX_LENGTH 1024  // Maximum length for plaintext and key
+
+// Function to clean and shift a character
+char shift_char(char ch, int shift) {
+    if (isalpha(ch)) {
+        char base = isupper(ch) ? 'A' : 'a';
+        return (ch - base + shift) % 26 + base;
+    }
+    return ch;  // Non-alphabetic characters are not encrypted
+}
+
+// Function to encrypt plaintext with the Vigenère cipher using a key stream
+void encrypt(const char *plaintext, const int *key, size_t key_length, char *ciphertext) {
+    size_t i;
+    size_t key_index = 0;
+    for (i = 0; plaintext[i] != '\0'; ++i) {
+        if (isalpha(plaintext[i])) {
+            ciphertext[i] = shift_char(plaintext[i], key[key_index]);
+            key_index = (key_index + 1) % key_length;  // Move to the next key value
+        } else {
+            ciphertext[i] = plaintext[i];  // Copy non-alphabetic characters unchanged
+        }
+    }
+    ciphertext[i] = '\0';  // Null-terminate the ciphertext string
+}
+
+// Function to decrypt ciphertext with the Vigenère cipher using a key stream
+void decrypt(const char *ciphertext, const int *key, size_t key_length, char *plaintext) {
+    size_t i;
+    size_t key_index = 0;
+    for (i = 0; ciphertext[i] != '\0'; ++i) {
+        if (isalpha(ciphertext[i])) {
+            plaintext[i] = shift_char(ciphertext[i], -key[key_index]);
+            key_index = (key_index + 1) % key_length;  // Move to the next key value
+        } else {
+            plaintext[i] = ciphertext[i];  // Copy non-alphabetic characters unchanged
+        }
+    }
+    plaintext[i] = '\0';  // Null-terminate the plaintext string
+}
+
+int main() {
+    char plaintext[MAX_LENGTH] = "meet me at the usual place at ten";
+    int key[MAX_LENGTH] = {3, 19, 5, 7, 11, 13, 17};  // Example key
+    size_t key_length = 7;
+    char ciphertext[MAX_LENGTH];
+    char decryptedtext[MAX_LENGTH];
+
+    printf("Plaintext: %s\n", plaintext);
+
+    // Encrypt the plaintext
+    encrypt(plaintext, key, key_length, ciphertext);
+    printf("Ciphertext: %s\n", ciphertext);
+
+    // Decrypt the ciphertext
+    decrypt(ciphertext, key, key_length, decryptedtext);
+    printf("Decrypted text: %s\n", decryptedtext);
+
+    return 0;
+}
