@@ -1,0 +1,117 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+
+#define BLOCK_SIZE 8 // 64 bits / 8 bytes
+
+// Permutation tables (simplified for demonstration)
+static const uint8_t IP[] = {
+    58, 50, 42, 34, 26, 18, 10, 2,
+    60, 52, 44, 36, 28, 20, 12, 4,
+    62, 54, 46, 38, 30, 22, 14, 6,
+    64, 56, 48, 40, 32, 24, 16, 8,
+    57, 49, 41, 33, 25, 17, 9, 1,
+    59, 51, 43, 35, 27, 19, 11, 3,
+    61, 53, 45, 37, 29, 21, 13, 5,
+    63, 55, 47, 39, 31, 23, 15, 7
+};
+
+static const uint8_t IP_INV[] = {
+    40, 8, 48, 16, 56, 24, 64, 32,
+    39, 7, 47, 15, 55, 23, 63, 31,
+    38, 6, 46, 14, 54, 22, 62, 30,
+    37, 5, 45, 13, 53, 21, 61, 29,
+    36, 4, 44, 12, 52, 20, 60, 28,
+    35, 3, 43, 11, 51, 19, 59, 27,
+    34, 2, 42, 10, 50, 18, 58, 26,
+    33, 1, 41, 9, 49, 17, 57, 25
+};
+
+// Simplified initial permutation function
+void permute(uint8_t *data, const uint8_t *table, size_t table_size) {
+    uint8_t temp[BLOCK_SIZE];
+    memset(temp, 0, BLOCK_SIZE);
+    for (size_t i = 0; i < table_size; i++) {
+        if (data[table[i] / 8] & (1 << (7 - (table[i] % 8)))) {
+            temp[i / 8] |= (1 << (7 - (i % 8)));
+        }
+    }
+    memcpy(data, temp, BLOCK_SIZE);
+}
+
+// Feistel function (simplified)
+void feistel_function(uint8_t *data, const uint8_t *subkey) {
+    // For demonstration purposes, this function is simplified and does not perform actual DES operations
+    // You should implement the full Feistel function with proper key mixing and substitution
+    for (size_t i = 0; i < BLOCK_SIZE; i++) {
+        data[i] ^= subkey[i % BLOCK_SIZE]; // Simplified operation
+    }
+}
+
+// Key schedule (simplified)
+void key_schedule(const uint8_t *key, uint8_t *subkeys) {
+    // For demonstration purposes, generate simple subkeys
+    for (size_t i = 0; i < BLOCK_SIZE; i++) {
+        subkeys[i] = key[i]; // Use the key as-is for all rounds (not secure)
+    }
+}
+
+// DES encryption (simplified)
+void des_encrypt(uint8_t *data, const uint8_t *key) {
+    uint8_t subkeys[BLOCK_SIZE];
+    key_schedule(key, subkeys);
+
+    permute(data, IP, 64);
+
+    for (int round = 0; round < 16; round++) {
+        uint8_t left[BLOCK_SIZE / 2], right[BLOCK_SIZE / 2];
+        memcpy(left, data, BLOCK_SIZE / 2);
+        memcpy(right, data + BLOCK_SIZE / 2, BLOCK_SIZE / 2);
+
+        feistel_function(right, subkeys); // Feistel function (simplified)
+        
+        // Swap and combine (simplified)
+        for (size_t i = 0; i < BLOCK_SIZE / 2; i++) {
+            data[i] = right[i];
+            data[i + BLOCK_SIZE / 2] = left[i] ^ data[i];
+        }
+    }
+
+    permute(data, IP_INV, 64);
+}
+
+// DES decryption (same as encryption in DES, just apply encryption function)
+void des_decrypt(uint8_t *data, const uint8_t *key) {
+    des_encrypt(data, key);
+}
+
+// Print data in hexadecimal format
+void print_hex(const char *label, const uint8_t *data, size_t length) {
+    printf("%s: ", label);
+    for (size_t i = 0; i < length; i++) {
+        printf("%02x", data[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    uint8_t key[BLOCK_SIZE] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}; // Example key
+    uint8_t plaintext[BLOCK_SIZE] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}; // Example plaintext
+    uint8_t ciphertext[BLOCK_SIZE];
+    uint8_t decryptedtext[BLOCK_SIZE];
+
+    printf("Original plaintext:\n");
+    print_hex("Plaintext", plaintext, BLOCK_SIZE);
+
+    // Encrypt
+    memcpy(ciphertext, plaintext, BLOCK_SIZE);
+    des_encrypt(ciphertext, key);
+    print_hex("Ciphertext", ciphertext, BLOCK_SIZE);
+
+    // Decrypt
+    memcpy(decryptedtext, ciphertext, BLOCK_SIZE);
+    des_decrypt(decryptedtext, key);
+    print_hex("Decrypted text", decryptedtext, BLOCK_SIZE);
+
+    return 0;
+}
