@@ -1,0 +1,75 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+int PC1[] = {
+    57, 49, 41, 33, 25, 17, 9, 1,
+    58, 50, 42, 34, 26, 18, 10, 2,
+    59, 51, 43, 35, 27, 19, 11, 3,
+    60, 52, 44, 36, 63, 55, 47, 39,
+    31, 23, 15, 7, 62, 54, 46, 38,
+    30, 22, 14, 6, 61, 53, 45, 37,
+    29, 21, 13, 5, 28, 20, 12, 4
+};
+int PC2[] = {
+    14, 17, 11, 24, 1, 5, 3, 28,
+    15, 6, 21, 10, 23, 19, 12, 4,
+    26, 8, 16, 7, 27, 20, 13, 2,
+    41, 52, 31, 37, 47, 55, 30, 40,
+    51, 45, 33, 48, 44, 49, 39, 56,
+    34, 53, 46, 42, 50, 36, 29, 32
+};
+int shifts[] = {1, 1, 2, 2, 2, 2, 1, 2, 1, 2, 2, 2, 2, 1, 2, 1};
+void permute(uint64_t key, int* permTable, int permSize, uint64_t* output);
+void shiftLeft(uint32_t* halfKey, int shift);
+void generateSubkeys(uint64_t key, uint64_t subkeys[16]);
+int main() {
+    uint64_t key = 0x133457799BBCDFF1; // Example key (64-bit)
+    uint64_t subkeys[16]; // Array to hold the 16 subkeys
+	generateSubkeys(key, subkeys);
+	for (int i = 0; i < 16; i++) {
+        printf("Subkey %2d: %016llx\n", i + 1, subkeys[i]);
+    }
+
+    return 0;
+}
+
+// Permutation function
+void permute(uint64_t key, int* permTable, int permSize, uint64_t* output) {
+    *output = 0;
+    for (int i = 0; i < permSize; i++) {
+        *output <<= 1;
+        *output |= (key >> (64 - permTable[i])) & 0x01;
+    }
+}
+
+// Left shift function
+void shiftLeft(uint32_t* halfKey, int shift) {
+    *halfKey = (*halfKey << shift) | (*halfKey >> (28 - shift));
+    *halfKey &= 0xFFFFFFF; // Ensure it's only 28 bits
+}
+
+// Key generation function
+void generateSubkeys(uint64_t key, uint64_t subkeys[16]) {
+    uint64_t permKey;
+    uint32_t C, D;
+    
+    // Apply PC-1 permutation
+    permute(key, PC1, 56, &permKey);
+    
+    // Split into two 28-bit halves
+    C = (permKey >> 28) & 0xFFFFFFF;
+    D = permKey & 0xFFFFFFF;
+    
+    // Generate 16 subkeys
+    for (int i = 0; i < 16; i++) {
+        // Shift halves
+        shiftLeft(&C, shifts[i]);
+        shiftLeft(&D, shifts[i]);
+        
+        // Combine halves
+        uint64_t combined = ((uint64_t)C << 28) | D;
+        
+        // Apply PC-2 permutation
+        permute(combined, PC2, 48, &subkeys[i]);
+    }
+}
