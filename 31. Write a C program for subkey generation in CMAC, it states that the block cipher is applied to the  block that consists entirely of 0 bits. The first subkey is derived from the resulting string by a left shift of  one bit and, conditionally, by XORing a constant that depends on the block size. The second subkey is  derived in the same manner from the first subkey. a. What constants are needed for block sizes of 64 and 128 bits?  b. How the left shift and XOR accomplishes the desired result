@@ -1,0 +1,59 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+
+// Function to print a byte array in hexadecimal format
+void print_hex(const char *label, const uint8_t *data, size_t length) {
+    printf("%s: ", label);
+    for (size_t i = 0; i < length; i++) {
+        printf("%02x", data[i]);
+    }
+    printf("\n");
+}
+
+// Function to left shift a block and optionally XOR with a constant
+void left_shift_and_xor(uint8_t *block, size_t length, uint8_t constant) {
+    uint8_t carry = 1; // Carry for left shift
+    for (size_t i = 0; i < length; i++) {
+        uint8_t new_carry = (block[i] & 0x80) ? 1 : 0; // Check if MSB was 1
+        block[i] = (block[i] << 1) | carry; // Perform left shift
+        carry = new_carry; // Update carry
+    }
+
+    // If there was a carry, XOR with the constant
+    if (carry) {
+        block[0] ^= constant;
+    }
+}
+
+// Function to generate subkeys for a given block size
+void generate_subkeys(const uint8_t *block, size_t block_size, uint8_t constant) {
+    uint8_t subkey1[block_size];
+    uint8_t subkey2[block_size];
+
+    // Initialize subkeys with the input block
+    memcpy(subkey1, block, block_size);
+    memcpy(subkey2, block, block_size);
+
+    // Generate the first subkey
+    left_shift_and_xor(subkey1, block_size, constant);
+    print_hex("First Subkey", subkey1, block_size);
+
+    // Generate the second subkey
+    left_shift_and_xor(subkey2, block_size, constant);
+    left_shift_and_xor(subkey2, block_size, constant); // Shift again to get the second subkey
+    print_hex("Second Subkey", subkey2, block_size);
+}
+
+int main() {
+    uint8_t block_64[8] = {0}; // 64-bit block (8 bytes)
+    uint8_t block_128[16] = {0}; // 128-bit block (16 bytes)
+
+    printf("Generating subkeys for 64-bit block size:\n");
+    generate_subkeys(block_64, sizeof(block_64), 0x1B); // 64-bit constant
+
+    printf("\nGenerating subkeys for 128-bit block size:\n");
+    generate_subkeys(block_128, sizeof(block_128), 0x87); // 128-bit constant
+
+    return 0;
+}
