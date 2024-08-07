@@ -1,0 +1,77 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <stdint.h>
+#include <string.h>
+
+// Example of a simple hash function (for educational purposes)
+void simple_hash(const uint8_t *message, size_t message_len, uint8_t *hash) {
+    // Simple hash: sum of ASCII values mod 256
+    uint8_t sum = 0;
+    for (size_t i = 0; i < message_len; i++) {
+        sum += message[i];
+    }
+    hash[0] = sum;
+}
+
+// Example DSA signature generation (simplified)
+void dsa_sign(const uint8_t *message, size_t message_len, uint8_t *signature) {
+    uint8_t hash[1];
+    simple_hash(message, message_len, hash);
+    
+    // Generate a random k value (for demonstration)
+    uint8_t k = rand() % 256;
+
+    // Simplified DSA signature generation
+    signature[0] = (hash[0] + k) % 256;
+    signature[1] = k;
+}
+
+// Example RSA signature generation (simplified)
+void rsa_sign(const uint8_t *message, size_t message_len, uint8_t *signature) {
+    uint8_t hash[1];
+    simple_hash(message, message_len, hash);
+    
+    // Simplified RSA signature generation
+    signature[0] = hash[0]; // Simplified, real RSA involves modular exponentiation
+}
+
+// Print the signature in hexadecimal format
+void print_hex(const char *label, const uint8_t *data, size_t length) {
+    printf("%s: ", label);
+    for (size_t i = 0; i < length; i++) {
+        printf("%02x", data[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    srand((unsigned int)time(NULL)); // Seed the random number generator
+
+    const uint8_t message[] = "example message";
+    size_t message_len = strlen((const char *)message);
+
+    uint8_t dsa_signature1[2];
+    uint8_t dsa_signature2[2];
+
+    uint8_t rsa_signature1[1];
+    uint8_t rsa_signature2[1];
+
+    // Generate DSA signatures
+    dsa_sign(message, message_len, dsa_signature1);
+    dsa_sign(message, message_len, dsa_signature2);
+
+    // Generate RSA signatures
+    rsa_sign(message, message_len, rsa_signature1);
+    rsa_sign(message, message_len, rsa_signature2);
+
+    // Print DSA signatures
+    print_hex("DSA Signature 1", dsa_signature1, sizeof(dsa_signature1));
+    print_hex("DSA Signature 2", dsa_signature2, sizeof(dsa_signature2));
+
+    // Print RSA signatures
+    print_hex("RSA Signature 1", rsa_signature1, sizeof(rsa_signature1));
+    print_hex("RSA Signature 2", rsa_signature2, sizeof(rsa_signature2));
+
+    return 0;
+}
