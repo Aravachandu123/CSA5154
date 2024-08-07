@@ -1,0 +1,98 @@
+#include <stdio.h>
+#include <stdlib.h>
+int mod26(int x) {
+    return (x % 26 + 26) % 26;
+}
+int modInverse(int a, int m) {
+    a = a % m;
+    for (int x = 1; x < m; x++) {
+        if ((a * x) % m == 1)
+            return x;
+    }
+    return -1;
+}
+int determinant(int matrix[2][2]) {
+    return mod26(matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0]);
+}
+void inverseMatrix(int matrix[2][2], int invMatrix[2][2]) {
+    int det = determinant(matrix);
+    int invDet = modInverse(det, 26);
+    invMatrix[0][0] = mod26(matrix[1][1] * invDet);
+    invMatrix[0][1] = mod26(-matrix[0][1] * invDet);
+    invMatrix[1][0] = mod26(-matrix[1][0] * invDet);
+    invMatrix[1][1] = mod26(matrix[0][0] * invDet);
+}
+void multiplyMatrix(int a[2][2], int b[2][2], int result[2][2]) {
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            result[i][j] = 0;
+            for (int k = 0; k < 2; k++) {
+                result[i][j] = mod26(result[i][j] + a[i][k] * b[k][j]);
+            }
+        }
+    }
+}
+void multiplyMatrixVector(int matrix[2][2], int vector[2], int result[2]) {
+    for (int i = 0; i < 2; i++) {
+        result[i] = 0;
+        for (int j = 0; j < 2; j++) {
+            result[i] = mod26(result[i] + matrix[i][j] * vector[j]);
+        }
+    }
+}
+void hillEncrypt(char plaintext[], char ciphertext[], int key[2][2]) {
+    int n = strlen(plaintext);
+    int vector[2], result[2];
+    for (int i = 0; i < n; i += 2) {
+        vector[0] = plaintext[i] - 'a';
+        vector[1] = plaintext[i+1] - 'a';
+        multiplyMatrixVector(key, vector, result);
+        ciphertext[i] = result[0] + 'a';
+        ciphertext[i+1] = result[1] + 'a';
+    }
+    ciphertext[n] = '\0';
+}
+void hillDecrypt(char ciphertext[], char decryptedtext[], int invKey[2][2]) {
+    int n = strlen(ciphertext);
+    int vector[2], result[2];
+    for (int i = 0; i < n; i += 2) {
+        vector[0] = ciphertext[i] - 'a';
+        vector[1] = ciphertext[i+1] - 'a';
+        multiplyMatrixVector(invKey, vector, result);
+        decryptedtext[i] = result[0] + 'a';
+        decryptedtext[i+1] = result[1] + 'a';
+    }
+    decryptedtext[n] = '\0';
+}
+void solveKeyMatrix(char plaintext[], char ciphertext[], int key[2][2]) {
+    int ptMatrix[2][2] = {
+        { plaintext[0] - 'a', plaintext[2] - 'a' },
+        { plaintext[1] - 'a', plaintext[3] - 'a' }
+    };
+    int ctMatrix[2][2] = {
+        { ciphertext[0] - 'a', ciphertext[2] - 'a' },
+        { ciphertext[1] - 'a', ciphertext[3] - 'a' }
+    };
+    int invPtMatrix[2][2];
+    inverseMatrix(ptMatrix, invPtMatrix);
+    multiplyMatrix(ctMatrix, invPtMatrix, key);
+}
+int main() {
+    char plaintext[] = "helpme";
+    char ciphertext[] = "csptok";
+    char decryptedtext[100];
+    int key[2][2];
+    int invKey[2][2];
+	if (strlen(plaintext) % 2 != 0 || strlen(ciphertext) % 2 != 0) {
+        printf("Error: The length of the plaintext and ciphertext must be even.\n");
+        return -1;
+    }
+    solveKeyMatrix(plaintext, ciphertext, key);
+    printf("Key matrix:\n");
+    printf("%d %d\n", key[0][0], key[0][1]);
+    printf("%d %d\n", key[1][0], key[1][1]);
+    inverseMatrix(key, invKey);
+    hillDecrypt(ciphertext, decryptedtext, invKey);
+    printf("Decrypted text: %s\n", decryptedtext);
+    return 0;
+}
