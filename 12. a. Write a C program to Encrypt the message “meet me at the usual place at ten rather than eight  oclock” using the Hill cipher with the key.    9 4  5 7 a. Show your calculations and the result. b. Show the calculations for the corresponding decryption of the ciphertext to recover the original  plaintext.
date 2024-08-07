@@ -1,0 +1,68 @@
+#include <stdio.h>
+#include <string.h>
+int mod26(int x) {
+    return (x % 26 + 26) % 26;
+}
+void multiplyMatrixVector(int matrix[2][2], int vector[2], int result[2]) {
+    result[0] = mod26(matrix[0][0] * vector[0] + matrix[0][1] * vector[1]);
+    result[1] = mod26(matrix[1][0] * vector[0] + matrix[1][1] * vector[1]);
+}
+int modInverse(int a, int m) {
+    a = a % m;
+    for (int x = 1; x < m; x++) {
+        if ((a * x) % m == 1)
+            return x;
+    }
+    return -1;
+}
+void inverseKeyMatrix(int key[2][2], int invKey[2][2]) {
+    int det = mod26(key[0][0] * key[1][1] - key[0][1] * key[1][0]);
+    int invDet = modInverse(det, 26);
+    
+    invKey[0][0] = mod26(key[1][1] * invDet);
+    invKey[0][1] = mod26(-key[0][1] * invDet);
+    invKey[1][0] = mod26(-key[1][0] * invDet);
+    invKey[1][1] = mod26(key[0][0] * invDet);
+}
+void hillEncrypt(char plaintext[], char ciphertext[], int key[2][2]) {
+    int n = strlen(plaintext);
+    int vector[2], result[2];
+    
+    for (int i = 0; i < n; i += 2) {
+        vector[0] = plaintext[i] - 'a';
+        vector[1] = plaintext[i+1] - 'a';
+        multiplyMatrixVector(key, vector, result);
+        ciphertext[i] = result[0] + 'a';
+        ciphertext[i+1] = result[1] + 'a';
+    }
+    ciphertext[n] = '\0';
+}
+void hillDecrypt(char ciphertext[], char decryptedtext[], int invKey[2][2]) {
+    int n = strlen(ciphertext);
+    int vector[2], result[2];
+   
+    for (int i = 0; i < n; i += 2) {
+        vector[0] = ciphertext[i] - 'a';
+        vector[1] = ciphertext[i+1] - 'a';
+        multiplyMatrixVector(invKey, vector, result);
+        decryptedtext[i] = result[0] + 'a';
+        decryptedtext[i+1] = result[1] + 'a';
+    }
+    decryptedtext[n] = '\0';
+}
+int main() {
+    char plaintext[] = "meetmeattheusualplaceattenratherthaneightoclock";
+    char ciphertext[100];
+    char decryptedtext[100];
+    int key[2][2] = {{9, 4}, {5, 7}};
+    int invKey[2][2];
+	if (strlen(plaintext) % 2 != 0) {
+        strcat(plaintext, "x");
+    }
+    hillEncrypt(plaintext, ciphertext, key);
+    printf("Ciphertext: %s\n", ciphertext);
+    inverseKeyMatrix(key, invKey);
+    hillDecrypt(ciphertext, decryptedtext, invKey);
+    printf("Decrypted text: %s\n", decryptedtext);
+    return 0;
+}
