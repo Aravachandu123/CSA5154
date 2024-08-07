@@ -1,0 +1,64 @@
+#include <stdio.h>
+#include <ctype.h>
+
+#define ALPHABET_SIZE 26
+
+// Function to find modular inverse of a modulo m
+int mod_inverse(int a, int m) {
+    for (int x = 1; x < m; x++) {
+        if ((a * x) % m == 1) {
+            return x;
+        }
+    }
+    return -1;  // Modular inverse does not exist
+}
+
+// Function to encrypt a single character
+char affine_encrypt(char p, int a, int b) {
+    if (!isalpha(p)) return p;  // Non-alphabetic characters are unchanged
+
+    char base = isupper(p) ? 'A' : 'a';
+    return (a * (p - base) + b) % ALPHABET_SIZE + base;
+}
+
+// Function to decrypt a single character
+char affine_decrypt(char c, int a, int b) {
+    if (!isalpha(c)) return c;  // Non-alphabetic characters are unchanged
+
+    char base = isupper(c) ? 'A' : 'a';
+    int a_inv = mod_inverse(a, ALPHABET_SIZE);
+
+    if (a_inv == -1) {
+        printf("Modular inverse does not exist.\n");
+        return c;
+    }
+
+    return a_inv * ((c - base - b + ALPHABET_SIZE) % ALPHABET_SIZE) % ALPHABET_SIZE + base;
+}
+
+int main() {
+    int a = 5;  // Example key value for a
+    int b = 8;  // Example key value for b
+
+    char plaintext[] = "Hello, World!";
+    char encrypted_text[sizeof(plaintext)];
+    char decrypted_text[sizeof(plaintext)];
+
+    printf("Plaintext: %s\n", plaintext);
+
+    // Encrypt the plaintext
+    for (int i = 0; plaintext[i] != '\0'; i++) {
+        encrypted_text[i] = affine_encrypt(plaintext[i], a, b);
+    }
+    encrypted_text[sizeof(plaintext) - 1] = '\0';
+    printf("Encrypted text: %s\n", encrypted_text);
+
+    // Decrypt the ciphertext
+    for (int i = 0; encrypted_text[i] != '\0'; i++) {
+        decrypted_text[i] = affine_decrypt(encrypted_text[i], a, b);
+    }
+    decrypted_text[sizeof(plaintext) - 1] = '\0';
+    printf("Decrypted text: %s\n", decrypted_text);
+
+    return 0;
+}
