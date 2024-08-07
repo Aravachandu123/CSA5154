@@ -1,0 +1,89 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MATRIX_SIZE 2
+#define ALPHABET_SIZE 26
+
+// Function to find the modular inverse of a matrix
+void matrix_inverse(int matrix[MATRIX_SIZE][MATRIX_SIZE], int inverse[MATRIX_SIZE][MATRIX_SIZE], int mod) {
+    int determinant = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+    int det_inv = -1;
+
+    // Compute the modular inverse of the determinant
+    for (int i = 1; i < mod; i++) {
+        if ((determinant * i) % mod == 1) {
+            det_inv = i;
+            break;
+        }
+    }
+
+    if (det_inv == -1) {
+        printf("Matrix is not invertible modulo %d\n", mod);
+        exit(1);
+    }
+
+    inverse[0][0] = matrix[1][1] * det_inv % mod;
+    inverse[0][1] = -matrix[0][1] * det_inv % mod;
+    inverse[1][0] = -matrix[1][0] * det_inv % mod;
+    inverse[1][1] = matrix[0][0] * det_inv % mod;
+
+    for (int i = 0; i < MATRIX_SIZE; i++) {
+        for (int j = 0; j < MATRIX_SIZE; j++) {
+            inverse[i][j] = (inverse[i][j] + mod) % mod;
+        }
+    }
+}
+
+// Function to multiply two matrices modulo mod
+void matrix_multiply(int a[MATRIX_SIZE][MATRIX_SIZE], int b[MATRIX_SIZE][MATRIX_SIZE], int result[MATRIX_SIZE][MATRIX_SIZE], int mod) {
+    for (int i = 0; i < MATRIX_SIZE; i++) {
+        for (int j = 0; j < MATRIX_SIZE; j++) {
+            result[i][j] = 0;
+            for (int k = 0; k < MATRIX_SIZE; k++) {
+                result[i][j] = (result[i][j] + a[i][k] * b[k][j]) % mod;
+            }
+        }
+    }
+}
+
+// Function to convert a string to a matrix
+void string_to_matrix(const char* str, int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
+    for (int i = 0; i < MATRIX_SIZE; i++) {
+        for (int j = 0; j < MATRIX_SIZE; j++) {
+            matrix[i][j] = str[i * MATRIX_SIZE + j] - 'A';
+        }
+    }
+}
+
+// Function to print a matrix
+void print_matrix(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
+    for (int i = 0; i < MATRIX_SIZE; i++) {
+        for (int j = 0; j < MATRIX_SIZE; j++) {
+            printf("%2d ", matrix[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+int main() {
+    char plaintext[] = "GY"; // Example plaintext "GY"
+    char ciphertext[] = "RI"; // Example ciphertext "RI"
+    
+    int P[MATRIX_SIZE][MATRIX_SIZE];
+    int C[MATRIX_SIZE][MATRIX_SIZE];
+    int P_inv[MATRIX_SIZE][MATRIX_SIZE];
+    int K[MATRIX_SIZE][MATRIX_SIZE];
+
+    string_to_matrix(plaintext, P);
+    string_to_matrix(ciphertext, C);
+
+    int P_inv_temp[MATRIX_SIZE][MATRIX_SIZE];
+    matrix_inverse(P, P_inv_temp, ALPHABET_SIZE);
+
+    matrix_multiply(C, P_inv_temp, K, ALPHABET_SIZE);
+
+    printf("Key matrix K:\n");
+    print_matrix(K);
+
+    return 0;
+}
